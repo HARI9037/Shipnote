@@ -25,8 +25,20 @@ type GitHubItem = {
   user?: { login: string };
 };
 
-export async function fetchPRs(repo: string, since: string): Promise<PR[]> {
-  const q = encodeURIComponent(`repo:${repo} is:pr is:merged merged:>=${since}`);
+/** Validates the start date and an optional end date (both YYYY-MM-DD). Ranges are limited to one year. */
+export function parseDateRange(sinceInput: unknown, untilInput?: unknown) {
+  const since = parseSince(sinceInput);
+  const until = untilInput === undefined || untilInput === "" ? undefined : parseSince(untilInput);
+  if (until && until < since) throw new Error("The end date must not be before the start date");
+  if (until && (Date.parse(until) - Date.parse(since)) / 864e5 > 366) {
+    throw new Error("Choose a range of one year or less");
+  }
+  return { since, until };
+}
+
+export async function fetchPRs(repo: string, since: string, until?: string): Promise<PR[]> {
+  const merged = until ? `merged:${since}..${until}` : `merged:>=${since}`;
+  const q = encodeURIComponent(`repo:${repo} is:pr is:merged ${merged}`);
   const res = await fetch(
     `https://api.github.com/search/issues?q=${q}&sort=updated&order=desc&per_page=100`,
     {

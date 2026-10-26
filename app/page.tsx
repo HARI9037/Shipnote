@@ -11,6 +11,12 @@ import { readNotesStream } from "@/lib/stream";
 
 const JSON_HEADERS = { "content-type": "application/json" };
 
+const isoDaysAgo = (days: number) => new Date(Date.now() - days * 864e5).toISOString().slice(0, 10);
+
+function describeRange(range: string, from: string, to: string) {
+  return range === "custom" ? `${from} to ${to}` : `last ${range} days`;
+}
+
 export default function Home() {
   const [provider, setProvider] = useState<ProviderId>("openai");
   const [apiKey, setApiKey] = useState("");
@@ -19,6 +25,8 @@ export default function Home() {
   const [remember, setRemember] = useState(false);
   const [repo, setRepo] = useState("");
   const [range, setRange] = useState("14");
+  const [from, setFrom] = useState(() => isoDaysAgo(14));
+  const [to, setTo] = useState(() => isoDaysAgo(0));
   const [prs, setPrs] = useState<PR[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
   const [tone, setTone] = useState("Friendly");
@@ -77,17 +85,24 @@ export default function Home() {
 
   async function load() {
     setMessage("Fetching merged PRs…");
-    const since = new Date(Date.now() - Number(range) * 864e5).toISOString().slice(0, 10);
+    const custom = range === "custom";
+    if (custom && (!from || !to)) return setMessage("Choose a start and end date.");
+    const since = custom ? from : isoDaysAgo(Number(range));
+    const until = custom ? to : undefined;
     const res = await fetch("/api/prs", {
       method: "POST",
       headers: JSON_HEADERS,
-      body: JSON.stringify({ repo, since }),
+      body: JSON.stringify({ repo, since, until }),
     });
     const data = await res.json().catch(() => ({}));
     if (data.error || !data.prs) return setMessage(data.error ?? "Could not fetch pull requests.");
     setPrs(data.prs);
     setSelected(data.prs.map((p: PR) => p.number));
-    setMessage(`${data.prs.length} merged PRs found.`);
+    setMessage(
+      data.prs.length >= 100
+        ? "Showing the 100 most recently updated merged PRs. Narrow the dates to see others."
+        : `${data.prs.length} merged PRs found.`,
+    );
   }
 
   async function generate() {
@@ -102,7 +117,7 @@ export default function Home() {
           model,
           baseUrl,
           repo,
-          range,
+          range: describeRange(range, from, to),
           tone,
           prs: prs.filter((p) => selected.includes(p.number)),
         }),
@@ -158,6 +173,10 @@ export default function Home() {
         <RepoForm
           repo={repo}
           range={range}
+          from={from}
+          to={to}
+          onFrom={setFrom}
+          onTo={setTo}
           message={message}
           onRepo={setRepo}
           onRange={setRange}

@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { parseRepo, parseSince, sanitizePRs } from "../lib/github";
+import { describe, expect, it, vi } from "vitest";
+import { fetchPRs, parseDateRange, parseRepo, parseSince, sanitizePRs } from "../lib/github";
 
 describe("parseRepo", () => {
   it("accepts owner/repo and GitHub URLs", () => {
@@ -36,4 +36,32 @@ describe("sanitizePRs", () => {
     expect(out[0].labels).toEqual(["a"]);
   });
   it("returns an empty list for non-arrays", () => expect(sanitizePRs("x")).toEqual([]));
+});
+
+describe("parseDateRange", () => {
+  it("accepts a start date alone or a start and end date", () => {
+    expect(parseDateRange("2026-10-01")).toEqual({ since: "2026-10-01", until: undefined });
+    expect(parseDateRange("2026-10-01", "2026-10-20")).toEqual({ since: "2026-10-01", until: "2026-10-20" });
+    expect(parseDateRange("2026-10-01", "")).toEqual({ since: "2026-10-01", until: undefined });
+  });
+  it("rejects an end before the start, ranges over a year, and injection in the end date", () => {
+    expect(() => parseDateRange("2026-10-20", "2026-10-01")).toThrow("end date");
+    expect(() => parseDateRange("2024-01-01", "2026-10-01")).toThrow("one year");
+    expect(() => parseDateRange("2026-10-01", "2026-10-02 repo:a/private")).toThrow();
+  });
+});
+
+describe("fetchPRs query", () => {
+  it("uses an open-ended qualifier without an end date and a bounded one with it", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      calls.push(decodeURIComponent(url));
+      return new Response(JSON.stringify({ items: [] }), { status: 200 });
+    });
+    await fetchPRs("a/b", "2026-10-01");
+    await fetchPRs("a/b", "2026-10-01", "2026-10-20");
+    vi.unstubAllGlobals();
+    expect(calls[0]).toContain("merged:>=2026-10-01");
+    expect(calls[1]).toContain("merged:2026-10-01..2026-10-20");
+  });
 });

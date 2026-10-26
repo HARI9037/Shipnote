@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { fetchPRs, parseRepo, parseSince } from "@/lib/github";
+import { fetchPRs, parseDateRange, parseRepo } from "@/lib/github";
 import { rateLimitResponse } from "@/lib/guard";
 
 export async function POST(req: Request) {
@@ -7,8 +7,9 @@ export async function POST(req: Request) {
   if (limited) return limited;
 
   try {
-    const { repo, since } = await req.json();
-    return NextResponse.json({ prs: await fetchPRs(parseRepo(repo), parseSince(since)) });
+    const { repo, since, until } = await req.json();
+    const range = parseDateRange(since, until);
+    return NextResponse.json({ prs: await fetchPRs(parseRepo(repo), range.since, range.until) });
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Could not fetch pull requests" },
