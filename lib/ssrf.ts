@@ -46,13 +46,15 @@ export async function validateBaseUrl(
   } catch {
     throw new Error("Enter a valid custom base URL");
   }
-  if (url.protocol !== "https:" && url.protocol !== "http:") throw new Error("Custom base URL must use HTTPS");
+  if (url.protocol !== "https:" && url.protocol !== "http:")
+    throw new Error("Custom base URL must use HTTPS");
   if (url.username || url.password) throw new Error("Custom base URL must not contain credentials");
 
   if (!allowPrivate) {
     if (url.protocol !== "https:") throw new Error("Custom base URL must use HTTPS");
     const host = stripBrackets(url.hostname);
-    if (host === "localhost" || host.endsWith(".localhost")) throw new Error("Private base URLs are not allowed");
+    if (host === "localhost" || host.endsWith(".localhost"))
+      throw new Error("Private base URLs are not allowed");
     if (net.isIP(host)) {
       if (privateAddress(host)) throw new Error("Private base URLs are not allowed");
     } else {
@@ -62,7 +64,8 @@ export async function validateBaseUrl(
       } catch {
         throw new Error("Could not resolve the custom base URL host");
       }
-      if (addresses.some(({ address }) => privateAddress(address))) throw new Error("Private base URLs are not allowed");
+      if (addresses.some(({ address }) => privateAddress(address)))
+        throw new Error("Private base URLs are not allowed");
     }
   }
   return url.toString().replace(/\/$/, "");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseRepo, parseSince } from "../lib/github";
+import { parseRepo, parseSince, sanitizePRs } from "../lib/github";
 
 describe("parseRepo", () => {
   it("accepts owner/repo and GitHub URLs", () => {
@@ -19,4 +19,21 @@ describe("parseSince", () => {
     expect(() => parseSince("yesterday")).toThrow();
     expect(() => parseSince(undefined)).toThrow();
   });
+});
+
+describe("sanitizePRs", () => {
+  it("caps count and field sizes and drops malformed entries", () => {
+    const many = Array.from({ length: 150 }, (_, i) => ({
+      number: i,
+      title: "x".repeat(500),
+      body_excerpt: "y".repeat(900),
+      labels: ["a", 5],
+    }));
+    const out = sanitizePRs([...many, { title: "no number" }, null]);
+    expect(out).toHaveLength(100);
+    expect(out[0].title).toHaveLength(300);
+    expect(out[0].body_excerpt).toHaveLength(400);
+    expect(out[0].labels).toEqual(["a"]);
+  });
+  it("returns an empty list for non-arrays", () => expect(sanitizePRs("x")).toEqual([]));
 });

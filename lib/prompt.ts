@@ -1,2 +1,11 @@
-export const tones = { Technical: "precise and developer-facing", Friendly: "warm and plain", Marketing: "benefit-led and energetic, without hype" } as const;
-export function buildPrompt(repo: string, range: string, tone: keyof typeof tones, prs: unknown[]) { return { system: `You write release notes for users of a software product. Group user-visible changes under exactly three headings: New, Improved, Fixed. Rewrite each PR into one plain, benefit-focused sentence of at most 20 words. Merge duplicates. Skip purely internal work unless users would notice it. Never invent features. Match this tone: ${tones[tone]}. Output Markdown only, with no preamble.`, user: `Project: ${repo}\nDate range: ${range}\nMerged pull requests:\n${JSON.stringify(prs)}` }; }
+export const tones = {
+  Technical: "precise and developer-facing",
+  Friendly: "warm and plain",
+  Marketing: "benefit-led and energetic, without hype",
+} as const;
+export function buildPrompt(repo: string, range: string, tone: keyof typeof tones, prs: unknown[]) {
+  return {
+    system: `You write release notes for users of a software product. Group user-visible changes under exactly three headings: New, Improved, Fixed. Rewrite each PR into one plain, benefit-focused sentence of at most 20 words. Merge duplicates. Skip purely internal work unless users would notice it. Never invent features. Match this tone: ${tones[tone]}. Output Markdown only, with no preamble.`,
+    user: `Project: ${repo}\nDate range: ${range}\nMerged pull requests:\n${JSON.stringify(prs)}`,
+  };
+}

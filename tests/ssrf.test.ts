@@ -63,16 +63,27 @@ describe("validateBaseUrl", () => {
   });
 
   it("permits private self-hosted endpoints only with the explicit override", async () => {
-    await expect(validateBaseUrl("http://127.0.0.1:11434/v1", true)).resolves.toBe("http://127.0.0.1:11434/v1");
+    await expect(validateBaseUrl("http://127.0.0.1:11434/v1", true)).resolves.toBe(
+      "http://127.0.0.1:11434/v1",
+    );
   });
 });
 
 describe("privateAddress", () => {
-  it.each(["0.0.0.0", "127.0.0.1", "10.1.2.3", "172.31.255.255", "192.168.0.1", "169.254.1.1", "100.127.0.1", "::1", "::", "fd12::1"])(
-    "treats %s as private",
-    (ip) => expect(privateAddress(ip)).toBe(true),
-  );
-  it.each(["8.8.8.8", "93.184.216.34", "172.32.0.1", "100.63.0.1", "2606:4700::1111"])("treats %s as public", (ip) =>
-    expect(privateAddress(ip)).toBe(false),
+  it.each([
+    "0.0.0.0",
+    "127.0.0.1",
+    "10.1.2.3",
+    "172.31.255.255",
+    "192.168.0.1",
+    "169.254.1.1",
+    "100.127.0.1",
+    "::1",
+    "::",
+    "fd12::1",
+  ])("treats %s as private", (ip) => expect(privateAddress(ip)).toBe(true));
+  it.each(["8.8.8.8", "93.184.216.34", "172.32.0.1", "100.63.0.1", "2606:4700::1111"])(
+    "treats %s as public",
+    (ip) => expect(privateAddress(ip)).toBe(false),
   );
 });

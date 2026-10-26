@@ -1,6 +1,34 @@
 import { NextResponse } from "next/server";
 import { friendlyError } from "@/lib/errors";
-import { PROVIDERS, isProviderId } from "@/lib/providers";
-import { checkRateLimit, clientIp } from "@/lib/rate-limit";
-import { validateBaseUrl } from "@/lib/ssrf";
-export async function POST(req: Request) { const limit = checkRateLimit(clientIp(req.headers)); if (!limit.allowed) return NextResponse.json({ error: "Too many requests. Please wait a minute and try again." }, { status: 429, headers: { "Retry-After": String(limit.retryAfter) } }); try { const { provider, model, baseUrl } = await req.json(); const apiKey = req.headers.get("x-llm-key"); if (!isProviderId(provider) || !apiKey || typeof model !== "string" || !model) throw new Error("Invalid API key"); const base = provider === "custom" ? await validateBaseUrl(baseUrl) : PROVIDERS[provider].baseUrl; let response: Response; if (provider === "anthropic") response = await fetch("https://api.anthropic.com/v1/messages", { method: "POST", redirect: "error", headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" }, body: JSON.stringify({ model, max_tokens: 8, messages: [{ role: "user", content: "Reply OK" }] }) }); else if (provider === "google") response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, { method: "POST", redirect: "error", headers: { "x-goog-api-key": apiKey, "content-type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: "Reply OK" }] }], generationConfig: { maxOutputTokens: 8 } }) }); else response = await fetch(`${base}/chat/completions`, { method: "POST", redirect: "error", headers: { Authorization: `Bearer ${apiKey}`, "content-type": "application/json" }, body: JSON.stringify({ model, [provider === "openai" ? "max_completion_tokens" : "max_tokens"]: 16, messages: [{ role: "user", content: "Reply OK" }] }) }); if (!response.ok) { const detail = await response.text().catch(() => ""); throw Object.assign(new Error(detail.slice(0, 500)), { status: response.status }); } return NextResponse.json({ ok: true }); } catch (error: unknown) { if (error instanceof Error && /base URL|HTTPS|Private|resolve|credentials/.test(error.message)) return NextResponse.json({ error: error.message }, { status: 400 }); const status = typeof error === "object" && error && "status" in error && typeof error.status === "number" ? error.status : 500; return NextResponse.json({ error: friendlyError(error, status) }, { status: 400 }); } }
+import { rateLimitResponse } from "@/lib/guard";
+import { configErrorMessage, sendToProvider } from "@/lib/llm";
+import { isProviderId } from "@/lib/providers";
+
+export async function POST(req: Request) {
+  const limited = rateLimitResponse(req.headers);
+  if (limited) return limited;
+
+  try {
+    const { provider, model, baseUrl } = await req.json();
+    const apiKey = req.headers.get("x-llm-key");
+    if (!isProviderId(provider) || !apiKey || typeof model !== "string" || !model) {
+      return NextResponse.json({ error: "Enter an API key and a model name." }, { status: 400 });
+    }
+    const response = await sendToProvider(
+      { provider, apiKey, model, baseUrl },
+      { user: "Reply OK" },
+      { stream: false, maxTokens: 16 },
+    );
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      return NextResponse.json(
+        { error: friendlyError(new Error(detail.slice(0, 500)), response.status) },
+        { status: 400 },
+      );
+    }
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    const message = configErrorMessage(error) ?? friendlyError(error);
+    return NextResponse.json({ error: message }, { status: 400 });
+  }
+}
