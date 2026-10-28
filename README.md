@@ -5,6 +5,13 @@ Open-source release notes from merged pull requests, written by the AI provider 
 Point it at a public GitHub repo, pick a date range, and get clean, editable, Markdown release notes grouped into New, Improved and Fixed.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/HARI9037/Shipnote)
+[![CI](https://github.com/HARI9037/Shipnote/actions/workflows/ci.yml/badge.svg)](https://github.com/HARI9037/Shipnote/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node: >=20](https://img.shields.io/badge/Node-%3E%3D20-green.svg)](package.json)
+
+![Shipnote demo](public/assets/demo.gif)
+
+---
 
 ## Why another changelog tool?
 
@@ -12,12 +19,13 @@ Tools like release-drafter and git-cliff assemble changelogs from labels or comm
 
 ## Features
 
-- Bring your own key: Anthropic, OpenAI, Google, OpenRouter, or any OpenAI-compatible endpoint
-- Merged PR fetch for the last 7, 14 or 30 days, with a checklist to exclude items
-- Token estimate before you generate
-- Streaming generation with Technical, Friendly or Marketing tone
-- Editable Markdown with live preview, copy, and `CHANGELOG.md` download
-- No account, no database
+- **Bring your own key:** Anthropic, OpenAI, Google, OpenRouter, or any OpenAI-compatible endpoint
+- **Merged PR fetch** for the last 7, 14 or 30 days, with a checklist to exclude items
+- **Token estimate** before you generate
+- **Streaming generation** with Technical, Friendly or Marketing tone
+- **Editable Markdown** with live preview, copy, and `CHANGELOG.md` download
+- **No account, no database** — fully stateless
+- **Self-host in 30 seconds** — single Next.js app, no database
 
 ## Quick start
 
@@ -34,8 +42,8 @@ Open http://localhost:3000, choose a provider, paste your key, and press **Test 
 
 | Variable                  | Purpose                                                                                                                                           |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `GITHUB_TOKEN`            | Raises GitHub API rate limits. A token with no scopes is enough for public repos.                                                                 |
-| `ALLOW_PRIVATE_BASE_URLS` | Set to `true` when self-hosting so the Custom provider can reach local servers such as Ollama or LM Studio. Leave it unset on public deployments. |
+| `GITHUB_TOKEN`            | Raises GitHub API rate limits (unauthenticated is 10 req/min). A token with **no scopes** is enough for public repos. Create one at [github.com/settings/tokens](https://github.com/settings/tokens). |
+| `ALLOW_PRIVATE_BASE_URLS` | Set to `true` when self-hosting so the Custom provider can reach local servers such as Ollama or LM Studio. **Leave unset on public deployments.** |
 
 See `.env.example`.
 
@@ -56,7 +64,26 @@ npm run build
 npm start
 ```
 
-To use a local model, set `ALLOW_PRIVATE_BASE_URLS=true`, choose **Custom OpenAI-compatible**, and enter a base URL such as `http://localhost:11434/v1`.
+To use a local model (Ollama, LM Studio, etc.), set `ALLOW_PRIVATE_BASE_URLS=true`, choose **Custom OpenAI-compatible**, and enter a base URL such as `http://localhost:11434/v1`.
+
+### Docker (optional)
+
+```dockerfile
+# Dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+```bash
+docker build -t shipnote .
+docker run -p 3000:3000 -e GITHUB_TOKEN=your_token shipnote
+```
 
 ## Known limitations
 
@@ -69,9 +96,9 @@ To use a local model, set `ALLOW_PRIVATE_BASE_URLS=true`, choose **Custom OpenAI
 ## Development
 
 ```bash
-npm test          # unit tests
-npm run typecheck
-npm run build
+npm test          # unit tests (68 tests)
+npm run typecheck # TypeScript strict check
+npm run build     # production build
 npm run format    # Prettier
 ```
 
@@ -81,6 +108,12 @@ The code is organised as: `app/api/*` (thin routes), `lib/llm.ts` (provider requ
 
 See [docs/PRD.md](docs/PRD.md): accounts and hosted changelog pages, private repos with your own GitHub token, tag-range selection, label filters, RSS, direct-from-browser mode, and publishing as a GitHub Release.
 
+## Contributing
+
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, dev setup, and the PR process.
+
+**Good first issues:** [github.com/HARI9037/Shipnote/labels/good%20first%20issue](https://github.com/HARI9037/Shipnote/labels/good%20first%20issue)
+
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) — © 2026 Sreehari R Nair (Build With Tommy)
