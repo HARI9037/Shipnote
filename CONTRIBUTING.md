@@ -15,14 +15,14 @@ Open http://localhost:3000 and test with your own API key.
 
 ## Development Commands
 
-| Command | Purpose |
-|---------|---------|
-| `npm run dev` | Start dev server (Turbopack) |
-| `npm run build` | Production build |
-| `npm run typecheck` | TypeScript strict check |
-| `npm test` | Run Vitest unit tests |
-| `npm run format` | Format with Prettier |
-| `npm run format:check` | Verify formatting |
+| Command                | Purpose                      |
+| ---------------------- | ---------------------------- |
+| `npm run dev`          | Start dev server (Turbopack) |
+| `npm run build`        | Production build             |
+| `npm run typecheck`    | TypeScript strict check      |
+| `npm test`             | Run Vitest unit tests        |
+| `npm run format`       | Format with Prettier         |
+| `npm run format:check` | Verify formatting            |
 
 ## Pull Request Process
 

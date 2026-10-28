@@ -1,6 +1,7 @@
 # Reddit Post (r/sideproject / r/opensource / r/webdev)
 
 ## Title
+
 I built an open-source release notes generator that uses YOUR API key (no shared keys, no database, self-hostable)
 
 ## Body
@@ -10,6 +11,7 @@ I built an open-source release notes generator that uses YOUR API key (no shared
 ### Why I built this
 
 Every changelog tool I tried had one of these problems:
+
 - **Shared AI key** — the host pays, doesn't scale, you don't control the model
 - **Label-based** — output is only as good as your PR hygiene (most teams have messy titles)
 - **Heavy setup** — database, auth, Docker, Kubernetes...
@@ -63,6 +65,7 @@ npm run dev
 ---
 
 **Looking for feedback on:**
+
 - Provider experience (Anthropic/OpenAI/Google/OpenRouter/custom)
 - Self-hosting with local models (Ollama, LM Studio)
 - UI/UX improvements

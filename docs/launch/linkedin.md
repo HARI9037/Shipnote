@@ -1,6 +1,7 @@
 # LinkedIn Post
 
 ## Headline
+
 Shipnote v0.1.0: Open-source release notes generator — bring your own AI key, no database, self-hostable in 30 seconds 🚀
 
 ## Body
@@ -10,6 +11,7 @@ After weeks of building, I'm excited to share **Shipnote** — a stateless, open
 ### The problem
 
 Most changelog tools fall into two camps:
+
 1. **SaaS with shared AI keys** — the host pays, costs don't scale, you're locked into their model
 2. **Label/commit convention parsers** — output quality = your team's PR hygiene (let's be honest, most PR titles are messy)
 

@@ -1,19 +1,23 @@
 # Show HN Submission
 
 ## Title
+
 Show HN: Shipnote – Open-source release notes from merged PRs, using your own API key
 
 ## URL
+
 https://shipnote.vercel.app (or your deployed URL)
 
 ## Submission Text
 
 I built Shipnote because every changelog tool I found either:
+
 - Required a shared server-side AI key (costly, doesn't scale)
 - Assembled notes from labels/commit conventions (output only as good as your PR titles)
 - Needed a database, auth, or complex setup
 
 Shipnote is different:
+
 - **Bring your own key** — Anthropic, OpenAI, Google, OpenRouter, or any OpenAI-compatible endpoint (Ollama, LM Studio when self-hosted)
 - **Stateless** — no database, no accounts, no server-side secrets
 - **Rewrites messy PR titles** into plain, benefit-focused sentences grouped as New/Improved/Fixed
@@ -22,6 +26,7 @@ Shipnote is different:
 - **Self-host in 30 seconds** — `npm run build && npm start`
 
 How it works:
+
 1. Pick a provider, paste your API key, test connection
 2. Enter a GitHub repo (e.g., `vercel/next.js`) and date range
 3. Fetch merged PRs, select which to include

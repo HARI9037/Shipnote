@@ -40,10 +40,10 @@ Open http://localhost:3000, choose a provider, paste your key, and press **Test 
 
 ### Environment variables (all optional)
 
-| Variable                  | Purpose                                                                                                                                           |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Variable                  | Purpose                                                                                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GITHUB_TOKEN`            | Raises GitHub API rate limits (unauthenticated is 10 req/min). A token with **no scopes** is enough for public repos. Create one at [github.com/settings/tokens](https://github.com/settings/tokens). |
-| `ALLOW_PRIVATE_BASE_URLS` | Set to `true` when self-hosting so the Custom provider can reach local servers such as Ollama or LM Studio. **Leave unset on public deployments.** |
+| `ALLOW_PRIVATE_BASE_URLS` | Set to `true` when self-hosting so the Custom provider can reach local servers such as Ollama or LM Studio. **Leave unset on public deployments.**                                                    |
 
 See `.env.example`.
 
