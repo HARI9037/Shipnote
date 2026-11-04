@@ -20,41 +20,39 @@ export async function POST(req: Request) {
       !model ||
       typeof repo !== "string"
     ) {
-      return NextResponse.json({ error: "Check your provider settings and repository." }, { status: 400 });
-    }
-    const selected = sanitizePRs(prs);
-    if (!selected.length)
-      return NextResponse.json({ error: "Select at least one pull request." }, { status: 400 });
-
-    const prompt = buildPrompt(
-      repo.slice(0, 200),
-      typeof range === "string" ? range.slice(0, 100) : "selected dates",
-      tone === "Technical" || tone === "Marketing" ? tone : "Friendly",
-      selected,
-    );
-    const response = await sendToProvider(
-      { provider, apiKey, model, baseUrl },
-      { system: prompt.system, user: prompt.user },
-      { stream: true, maxTokens: MAX_OUTPUT_TOKENS },
-    );
-
-    if (!response.ok || !response.body) {
-      // The provider's message is only used to classify the failure, never returned to the client.
-      const detail = await response.text().catch(() => "");
       return NextResponse.json(
-        { error: friendlyError(new Error(detail.slice(0, 500)), response.status) },
-        { status: 400 },
+        { error: "Invalid request parameters" },
+        { status: 400 }
       );
     }
-    return new Response(response.body, {
-      headers: {
-        "content-type": "text/event-stream",
-        "cache-control": "no-cache, no-transform",
-        "x-content-type-options": "nosniff",
-      },
+
+    const cleanPRs = sanitizePRs(prs);
+    if (!cleanPRs.length) {
+      return NextResponse.json(
+        { error: "No pull requests provided" },
+        { status: 400 }
+      );
+    }
+
+    const prompt = buildPrompt({
+      repo,
+      range,
+      tone,
+      prs: cleanPRs,
     });
-  } catch (error) {
-    const message = configErrorMessage(error) ?? "Could not generate notes. Check your provider settings.";
-    return NextResponse.json({ error: message }, { status: 400 });
+
+    const result = await sendToProvider({
+      provider,
+      model,
+      baseUrl,
+      apiKey,
+      prompt,
+      maxTokens: MAX_OUTPUT_TOKENS,
+    });
+
+    return NextResponse.json({ text: result });
+  } catch (err) {
+    const message = friendlyError(err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
