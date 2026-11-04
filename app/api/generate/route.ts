@@ -20,41 +20,48 @@ export async function POST(req: Request) {
       !model ||
       typeof repo !== "string"
     ) {
-      return NextResponse.json({ error: "Check your provider settings and repository." }, { status: 400 });
-    }
-    const selected = sanitizePRs(prs);
-    if (!selected.length)
-      return NextResponse.json({ error: "Select at least one pull request." }, { status: 400 });
-
-    const prompt = buildPrompt(
-      repo.slice(0, 200),
-      typeof range === "string" ? range.slice(0, 100) : "selected dates",
-      tone === "Technical" || tone === "Marketing" ? tone : "Friendly",
-      selected,
-    );
-    const response = await sendToProvider(
-      { provider, apiKey, model, baseUrl },
-      { system: prompt.system, user: prompt.user },
-      { stream: true, maxTokens: MAX_OUTPUT_TOKENS },
-    );
-
-    if (!response.ok || !response.body) {
-      // The provider's message is only used to classify the failure, never returned to the client.
-      const detail = await response.text().catch(() => "");
       return NextResponse.json(
-        { error: friendlyError(new Error(detail.slice(0, 500)), response.status) },
-        { status: 400 },
+        { error: "Missing or invalid configuration" },
+        { status: 400 }
       );
     }
-    return new Response(response.body, {
-      headers: {
-        "content-type": "text/event-stream",
-        "cache-control": "no-cache, no-transform",
-        "x-content-type-options": "nosniff",
-      },
+
+    const sanitizedPRs = sanitizePRs(prs);
+    if (!sanitizedPRs || sanitizedPRs.length === 0) {
+      return NextResponse.json(
+        { error: "No valid PRs provided" },
+        { status: 400 }
+      );
+    }
+
+    const prompt = buildPrompt({
+      repo,
+      range,
+      tone,
+      prs: sanitizedPRs,
     });
-  } catch (error) {
-    const message = configErrorMessage(error) ?? "Could not generate notes. Check your provider settings.";
-    return NextResponse.json({ error: message }, { status: 400 });
+
+    const result = await sendToProvider({
+      provider,
+      model,
+      baseUrl,
+      apiKey,
+      prompt,
+      maxTokens: MAX_OUTPUT_TOKENS,
+    });
+
+    if (!result) {
+      return NextResponse.json(
+        { error: configErrorMessage(provider) },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ content: result });
+  } catch (err) {
+    return NextResponse.json(
+      { error: friendlyError(err) },
+      { status: 500 }
+    );
   }
 }
