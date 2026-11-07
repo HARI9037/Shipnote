@@ -116,4 +116,4 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines,
 
 ## License
 
-[MIT](LICENSE) — © 2026 Sreehari R Nair (Build With Tommy)
+[MIT](LICENSE) — © 2026 Sreehari R Nair
